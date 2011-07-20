@@ -1,0 +1,26 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+sub hook_rcpt {
+
+    my ($self, $transaction) = (shift, shift);
+
+    my $orig_user = $_[0]->user();
+    my $domain    = $_[0]->host();
+
+    my $user = $orig_user;
+
+    # replace the first instance of "-" with "+"
+    $user =~ s/-/+/;
+
+    if ($orig_user ne $user) {
+        my $old = "<" . $orig_user . '@' . $domain . ">";
+        my $new = "<" . $user . '@' . $domain . ">";
+        $_[0] = Qpsmtpd::Address->new($new);
+        $self->log(LOGINFO, "qmail-ext-convert: replaced $old with $new");
+    }
+
+    return (DECLINED);
+}
